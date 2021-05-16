@@ -15,6 +15,13 @@ Parameters:
     Type: String
     Default: 10.1.2.0/24
 
+  Ec2InstanceType:
+    Type: String
+    Default: t3a.nano
+
+  KeyName:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -86,3 +93,35 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref Subnet2
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http, https to client host
+      GroupName: !Sub ${EnvironmentName}-EC2
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-EC2
+
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: 'ami-0ca38c7440de1749a'
+      InstanceType: !Ref Ec2InstanceType
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SubnetId: !Ref Subnet1
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
